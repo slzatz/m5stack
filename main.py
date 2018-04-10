@@ -50,5 +50,8 @@ if tmo > 0:
         except:
             print("mDNS not available")
 
+def reset():
+    machine.reset()
+
 import sonos_remote_m5stack
 
