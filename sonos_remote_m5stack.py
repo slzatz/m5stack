@@ -8,10 +8,10 @@ sonos-companion script esp_check_mqtt.py to AWS EC2 mqtt broker
 Buttons and volume are publish to the topic: sonos/ct or sonos/nyc
 The topic that is subscribed to for track info is sonos/{loc}/track
 '''
-#import gc # not sure if needed
+import gc # not sure if needed
 import network
-from time import sleep, sleep_ms, strftime, localtime #time
-from machine import RTC #Pin, I2C
+from time import sleep, time, strftime, localtime #time, sleep_ms, strftime, localtime
+#from machine import RTC #Pin, I2C
 import json
 from config import mqtt_aws_host
 from settings import ssid, pw, mqtt_id, location as loc
@@ -64,7 +64,6 @@ def subscb(task):
 #  print("[{}] Published: {}".format(pub[0], pub[1]))
 
 def datacb(msg):
-  #zz = json.loads(msg.decode('utf-8'))
   print("[{}] Data arrived - topic: {}, message:{}".format(msg[0], msg[1], msg[2]))
 
   try:
@@ -74,53 +73,27 @@ def datacb(msg):
     zz = {}
 
   tft.clear()
-  ##################################################################
   artist = zz.get('artist', '')
   if artist:
     try:
       tft.image(0,0,'/sd/{}.jpg'.format(artist.lower()))
     except:
       pass
-  ##################################################################
-  #tft.text(5, 5, zz.get('artist', '')+"\n") 
   tft.text(5, 5, artist+"\n") 
 
   title = wrap(zz.get('title', ''), 28) # 28 seems right for DejaVu18
   for line in title:
     tft.text(5, tft.LASTY, line+"\n")
 
-wlan = network.WLAN(network.STA_IF)
-wlan.active(True)
-if not wlan.isconnected():
-  print('connecting to network...')
-  wlan.connect(ssid, pw)
-  while not wlan.isconnected():
-    pass
-print('network config:', wlan.ifconfig())     
-sleep(5)
-
-rtc = RTC()
-print("synchronize time with NTP server ...")
-# limit the time waiting since sometimes never connects
-rtc.ntp_sync(server="pool.ntp.org")
-for n in range(10):
-  if rtc.synced():
-    break
-  sleep_ms(100)
-else:
-    print("Could not synchronize with ntp")
-print("Time set to: {}".format(strftime("%c", localtime())))
 
 mqttc = network.mqtt(mqtt_id, mqtt_aws_host, connected_cb=conncb, clientid=mqtt_id)
 sleep(1)
-# note got Guru Meditation Error with the published callback
+# note got Guru Meditation Error with the publish callback
 #mqttc.config(subscribed_cb=subscb, published_cb=pubcb, data_cb=datacb)
 mqttc.config(subscribed_cb=subscb, data_cb=datacb)
 mqttc.subscribe(topic)
 
-#cur_time = time()
-level = 300
-# increase the volume
+# decrease the volume
 def button_hander_a(pin, pressed):
   if pressed:
     try:
@@ -151,10 +124,12 @@ a = m5stack.ButtonA(callback=button_hander_a)
 b = m5stack.ButtonB(callback=button_hander_b)
 c = m5stack.ButtonC(callback=button_hander_c)
 
+cur_time = 0
+
 while 1:
-  #t = time()
-  #if t > cur_time + 600:
-   # print(strftime("%c", localtime()))
-   # cur_time = t
-  #gc.collect()
+  t = time()
+  if t > cur_time + 600:
+    print(strftime("%c", localtime()))
+    cur_time = t
+  gc.collect()
   sleep(.5)
