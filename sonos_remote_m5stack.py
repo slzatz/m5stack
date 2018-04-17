@@ -10,7 +10,9 @@ The topic that is subscribed to for track info is sonos/{loc}/track
 '''
 import gc # not sure if needed
 import network
-from time import sleep, time, strftime, localtime #time, sleep_ms, strftime, localtime
+from time import sleep
+# if running loop uncomment the following
+#from time import time, sleep_ms, strftime, localtime
 #from machine import RTC #Pin, I2C
 import json
 from config import mqtt_aws_host
@@ -96,6 +98,7 @@ mqttc.subscribe(topic)
 # decrease the volume
 def button_hander_a(pin, pressed):
   if pressed:
+    print("A pressed")
     try:
       mqttc.publish('sonos/'+loc, json.dumps({"action":"quieter"}))
     except Exception as e:
@@ -105,6 +108,7 @@ def button_hander_a(pin, pressed):
 # play/pause
 def button_hander_b(pin, pressed):
   if pressed:
+    print("B pressed")
     try:
       mqttc.publish('sonos/'+loc, json.dumps({"action":"play_pause"}))
     except Exception as e:
@@ -114,6 +118,7 @@ def button_hander_b(pin, pressed):
 # increase the volume
 def button_hander_c(pin, pressed):
   if pressed:
+    print("C pressed")
     try:
       mqttc.publish('sonos/'+loc, json.dumps({"action":"louder"}))
     except Exception as e:
@@ -124,12 +129,13 @@ a = m5stack.ButtonA(callback=button_hander_a)
 b = m5stack.ButtonB(callback=button_hander_b)
 c = m5stack.ButtonC(callback=button_hander_c)
 
-cur_time = 0
-
-while 1:
-  t = time()
-  if t > cur_time + 600:
-    print(strftime("%c", localtime()))
-    cur_time = t
-  gc.collect()
-  sleep(.5)
+# since it's all callbacks that persist when script exits, don't have to run loop
+#cur_time = 0
+#
+#while 1:
+#  t = time()
+#  if t > cur_time + 600:
+#    print(strftime("%c", localtime()))
+#    cur_time = t
+#  #gc.collect()
+#  sleep(.5)
