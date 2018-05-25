@@ -89,6 +89,7 @@ def datacb(msg):
 
 
 mqttc = network.mqtt(mqtt_id, mqtt_aws_host, connected_cb=conncb, clientid=mqtt_id)
+mqttc.start()
 sleep(1)
 # note got Guru Meditation Error with the publish callback
 #mqttc.config(subscribed_cb=subscb, published_cb=pubcb, data_cb=datacb)
