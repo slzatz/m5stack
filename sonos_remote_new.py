@@ -16,6 +16,9 @@ same AWS EC2 mqtt broker by subscribing to sonos/{loc}/track
 Displays images of the artists that have been placed on sdcard
 Laptop script url_image2sdcard.py is used to create the images
 in a local directory that are then copied to the sdcard
+
+Note that if main uses tft then main must also deinit tft
+before this script runs or screen is unresponsive
 '''
 #import gc # not sure if needed
 import network
