@@ -61,6 +61,9 @@ if tmo > 0:
         except:
             print("mDNS not available")
 
+# tft deinit necessary or scripts that use screen will not work
+tft.deinit()
+
 def reset():
     machine.reset()
 
