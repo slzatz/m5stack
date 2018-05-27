@@ -1,0 +1,66 @@
+# Boris main.py plus printing ip address to screen on startup
+import machine
+import network
+import utime
+from settings import ssid, pw
+import m5stack # m5stack imports input; from tuupola @ https://github.com/tuupola/micropython-m5stack
+
+tft = m5stack.Display()
+tft.font(tft.FONT_DejaVu18, fixedwidth=False)
+tft.clear()
+tft.text(5, 20, "Hello Steve \n")
+
+print("")
+print("Starting WiFi ...")
+tft.text(5, tft.LASTY, "Starting WiFi ...\n")
+
+sta_if = network.WLAN(network.STA_IF)
+
+_ = sta_if.active(True)
+_ = sta_if.connect(ssid, pw)
+
+tmo = 50
+while not sta_if.isconnected():
+    utime.sleep_ms(100)
+    tmo -= 1
+    if tmo == 0:
+        break
+
+if tmo > 0:
+    ifcfg = sta_if.ifconfig()
+    print("WiFi started, IP:", ifcfg[0])
+    tft.text(5, tft.LASTY, "WiFi started successfully\n")
+    tft.text(5, tft.LASTY, "IP address: {}\n".format(ifcfg[0]))
+    utime.sleep_ms(500)
+
+    rtc = machine.RTC()
+    print("Synchronize time from NTP server ...")
+    tft.text(5, tft.LASTY, "Sync time with NTP server ...\n")
+    rtc.ntp_sync(server="hr.pool.ntp.org", tz="EST5EDT") # update once
+    tmo = 100
+    while not rtc.synced():
+        utime.sleep_ms(100)
+        tmo -= 1
+        if tmo == 0:
+            break
+
+    if tmo > 0:
+        utime.sleep_ms(200)
+        print("Time set:", utime.strftime("%c"))
+        tft.text(5, tft.LASTY, "{}\n".format(utime.strftime("%c")))
+        print("start ftp and telnet")
+        tft.text(5, tft.LASTY, "Starting FTP and Telnet ...\n")
+        _ = network.ftp.start()
+        _ = network.telnet.start()
+        try:
+            mdns = network.mDNS()
+            _ = mdns.start("mPy","MicroPython with mDNS")
+            _ = mdns.addService('_ftp', '_tcp', 21, "MicroPython", {"board": "ESP32", "service": "mPy FTP File transfer", "passive": "True"})
+            _ = mdns.addService('_telnet', '_tcp', 23, "MicroPython", {"board": "ESP32", "service": "mPy Telnet REPL"})
+            _ = mdns.addService('_http', '_tcp', 80, "MicroPython", {"board": "ESP32", "service": "mPy Web server"})
+        except:
+            print("mDNS not available")
+
+def reset():
+    machine.reset()
+
