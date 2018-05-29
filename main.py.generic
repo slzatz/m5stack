@@ -2,6 +2,8 @@
 import machine
 import network
 import utime
+import gc
+from sys import modules
 from settings import ssid, pw
 import m5stack # m5stack imports input; from tuupola @ https://github.com/tuupola/micropython-m5stack
 
@@ -67,3 +69,8 @@ tft.deinit()
 def reset():
     machine.reset()
 
+def reload(mod):
+    mod_name = mod.__name__
+    del sys.modules[mod_name]
+    gc.collect()
+    return __import__(mod_name)
