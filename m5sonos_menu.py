@@ -30,8 +30,8 @@ print("publish topic =", pub_topic)
 actions = {0:"play_pause",
            1:"quieter",
            2:"louder",
-           3:"WNYC",
-           4:"Patty Griffin Pandora",
+           3:"play_wnyc",
+           4:"patty griffin pandora",
            5:"Shuffle Neil Young",
            6:"Shuffle Jason Isbell",
            7:"Shuffle Patty Griffin"}
