@@ -30,11 +30,11 @@ print("publish topic =", pub_topic)
 actions = {0:"play_pause",
            1:"quieter",
            2:"louder",
-           3:"play_wnyc",
-           4:"patty griffin pandora",
-           5:"Shuffle Neil Young",
-           6:"Shuffle Jason Isbell",
-           7:"Shuffle Patty Griffin"}
+           3:"station wnyc",
+           4:"station patty griffin",
+           5:"shuffle neil young",
+           6:"shuffle jason isbell",
+           7:"shuffle patty griffin"}
 tft = m5stack.Display()
 tft.font(tft.FONT_DejaVu18, fixedwidth=False)
 tft.clear()
@@ -83,19 +83,23 @@ def datacb(msg):
     print(e)
     zz = {}
 
-  tft.clear()
+  #tft.clear()
   artist = zz.get('artist', '')
-  if artist:
-    try:
-      tft.image(0,0,'/sd/{}.jpg'.format(artist.lower().replace(' ', '_')))
-    except:
-      pass
-  tft.text(5, 5, artist+"\n") 
+  #if artist:
+  #  try:
+  #    tft.image(0,0,'/sd/{}.jpg'.format(artist.lower().replace(' ', '_')))
+  #  except:
+  #    pass
+  #tft.text(5, 5, artist+"\n") 
 
-  title = wrap(zz.get('title', ''), 28) # 28 seems right for DejaVu18
-  for line in title:
-    tft.text(5, tft.LASTY, line+"\n")
-
+  title = zz.get('title', '')
+  #title = wrap(zz.get('title', ''), 28) # 28 seems right for DejaVu18
+  #for line in title:
+  #  tft.text(5, tft.LASTY, line+"\n")
+  y = n+8*25
+  s = "{}-{}".format(artist, title)[:30]
+  tft.textClear(5, y, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx") 
+  tft.text(5, y, s, tft.CYAN)
 
 # note published callback doesn't seem to do anything
 mqttc = network.mqtt(mqtt_id, mqtt_aws_host, connected_cb=conncb,
@@ -105,7 +109,7 @@ mqttc = network.mqtt(mqtt_id, mqtt_aws_host, connected_cb=conncb,
 mqttc.start()
 sleep(1)
 
-#mqttc.subscribe(sub_topic)
+mqttc.subscribe(sub_topic)
 
 # ButtonA
 def button_hander_a(pin, pressed):
