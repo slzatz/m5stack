@@ -40,26 +40,30 @@ actions = {0:"play_pause",
            1:"quieter",
            2:"louder",
            3:"station wnyc",
-           4:"station patty griffin",
-           5:"shuffle neil young",
-           6:"shuffle jason isbell",
-           7:"shuffle patty griffin"}
+           4:"next",
+           5:"station patty griffin",
+           6:"shuffle neil young",
+           7:"shuffle jason isbell",
+           8:"shuffle patty griffin"}
 
 #page = 1 #0 = artist picture and track info; 1 = menu items, 2 = more menu items etc.
-n = 10
+
+tft = m5stack.Display()
+tft.font(tft.FONT_DejaVu18, fixedwidth=False)
+
+n = 5
+#track_info = []
 
 def draw_menu():
     global row
     global page
     page = 1
-    row = 10
-    tft = m5stack.Display()
-    tft.font(tft.FONT_DejaVu18, fixedwidth=False)
+    row = n
     tft.clear()
     for i,action in actions.items():
         tft.text(20, n+i*25, action)
 
-    tft.text(5, 10, ">")
+    tft.text(5, row, ">")
 
 def wrap(text,lim):
   lines = []
@@ -109,8 +113,10 @@ def datacb___(msg):
 def datacb(msg):
   global page
   global row
+  #global track_info
+  #track_info = msg
   page = 0
-  row = 10
+  row = n
   print("[{}] Data arrived - topic: {}, message:{}".format(msg[0], msg[1], msg[2]))
 
   try:
@@ -151,7 +157,6 @@ def button_hander_a(pin, pressed):
       tft.text(5, row, "  ")
       row+=25
       tft.text(5, row, ">")
-      #print("action number =", (row-n)//25)
       m5stack.tone(1800, duration=10, volume=1)
     else:
       draw_menu()
@@ -162,7 +167,6 @@ def button_hander_b(pin, pressed):
   if pressed:
     flag = 1
     print("B pressed")
-    #print("action number =", (row-n)//25)
     m5stack.tone(1800, duration=10, volume=1)
 
 # ButtonC
@@ -174,7 +178,6 @@ def button_hander_c(pin, pressed):
       tft.text(5, row, "  ")
       row-=25
       tft.text(5, row, ">")
-      #print("action number =", (row-n)//25)
       m5stack.tone(1800, duration=10, volume=1)
     else:
       draw_menu()
