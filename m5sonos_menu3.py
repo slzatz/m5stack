@@ -20,13 +20,12 @@ import m5stack # from tuupola @ https://github.com/tuupola/micropython-m5stack
 import network
 import json
 from config import mqtt_aws_host
-#from settings import mqtt_id #location as loc
-from settings import mqtt_id, location as loc
+from settings import mqtt_id 
+#from settings import mqtt_id, location as loc
 
-# the below is where I'd like things to go with main writing to
-# the file location
-#with open('location', 'r') as f:
-#    loc = f.read()
+# main.py writes the file location on reset
+with open('location', 'r') as f:
+    loc = f.read()
 
 sub_topic = 'sonos/{}/track'.format(loc)
 pub_topic =  'sonos/{}'.format(loc)
@@ -140,6 +139,7 @@ mqttc.subscribe(sub_topic)
 
 # ButtonA
 def button_hander_a(pin, pressed):
+  global flag
   global row
   if pressed:
     print("A pressed")
@@ -168,6 +168,7 @@ def button_hander_b(pin, pressed):
 
 # ButtonC
 def button_hander_c(pin, pressed):
+  global flag
   global row
   if pressed:
     print("C pressed")

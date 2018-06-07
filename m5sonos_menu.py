@@ -16,7 +16,10 @@ import m5stack # from tuupola @ https://github.com/tuupola/micropython-m5stack
 import network
 import json
 from config import mqtt_aws_host
-from settings import ssid, pw, mqtt_id, location as loc
+from settings import mqtt_id #location as loc
+
+with open('location', 'r') as f:
+    loc = f.read()
 
 sub_topic = 'sonos/{}/track'.format(loc)
 pub_topic =  'sonos/{}'.format(loc)
