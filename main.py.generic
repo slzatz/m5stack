@@ -29,20 +29,18 @@ sta_if = network.WLAN(network.STA_IF)
 
 _ = sta_if.active(True)
 
-ap_list = sta_if.scan()
+ap_list = [ap[0].decode() for ap in sta_if.scan()]
 
-for ap in ap_list:
-    print("checking ap: {}".format(ap[0].decode()))
-    for location,ssid in ssids.items():
-        if ssid==ap[0].decode():
-            print("location =",location)
-            print("ssid =",ssid)
-            break
-    else:
-        print("Did not find a known AP")
-        tft.text(5, tft.LASTY, "Did not find a known AP\n")
-        tft.deinit()
-        exit()
+for location,ssid in ssids.items():
+    if ssid in ap_list:
+        print("location =",location)
+        print("ssid =",ssid)
+        break
+else:
+    print("Did not find a known AP")
+    tft.text(5, tft.LASTY, "Did not find a known AP\n")
+    tft.deinit()
+    exit()
 
 with open('location', 'w') as f:
     f.write(location)
