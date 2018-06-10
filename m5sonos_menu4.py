@@ -36,15 +36,15 @@ print("host =", mqtt_aws_host)
 print("subscribe topic =", sub_topic)
 print("publish topic =", pub_topic)
 
-actions = {0:"play_pause",
-           1:"quieter",
-           2:"louder",
-           3:"station wnyc",
-           4:"next",
-           5:"station patty griffin",
-           6:"shuffle neil young",
-           7:"shuffle jason isbell",
-           8:"shuffle patty griffin"}
+#actions = {0:"play_pause",
+#           1:"quieter",
+#           2:"louder",
+#           3:"station wnyc",
+#           4:"next",
+#           5:"station patty griffin",
+#           6:"shuffle neil young",
+#           7:"shuffle jason isbell",
+#           8:"shuffle patty griffin"}
 new_actions = {
 0:
   {0:'quieter',
@@ -183,7 +183,7 @@ def button_hander_a(pin, pressed):
       tft.text(5, row, ">")
     else:
       #if image showing -> quieter
-      row = _N + 25
+      row = _N 
       flag = 1
 
     m5stack.tone(1800, duration=10, volume=1)
@@ -213,7 +213,7 @@ def button_hander_c(pin, pressed):
       m5stack.tone(1800, duration=10, volume=1)
     else:
       #if image showing -> louder
-      row = _N + 50
+      row = _N + 25
       flag = 1
 
     m5stack.tone(1800, duration=10, volume=1)
