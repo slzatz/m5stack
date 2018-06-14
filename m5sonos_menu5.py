@@ -40,39 +40,37 @@ print("uri = ", uri)
 
 #each list corresponds to a page
 #page 4, the queue, gets filled in programmatically
+
 actions = [
 ['quieter', 'louder'],
 
-[  "play_pause",
-   "quieter",
-   "louder",
-   "next",
-   "station wnyc",
-   "station quickmix",
-   "shuffle menu 2",
-   "station menu 3",
-   "queue"],
+[  ("play/pause","play_pause"),
+   ("quieter","quieter"),
+   ("louder","louder"),
+   ("skip","next"),
+   ("WNYC","station wnyc"),
+   ("Pandora mix","station quickmix"),
+   ("shuffle ...","shuffle"), # 2 shuffle> def display_choices()
+   ("Pandora station ...","station", #3
+   ("show queue ...","queue")],
 
-[  "shuffle neil young",
-   "shuffle jason isbell",
-   "shuffle patty griffin",
-   "shuffle israel nash",
-   "shuffle gillian welch",
-   "shuffle counting crows",
-   "shuffle courtney barnett",
-   "shuffle dar williams"],
+[  ("Neil Young","shuffle neil young"),
+   ("Jason Isbell","shuffle jason isbell"),
+   ("Patty Griffin","shuffle patty griffin"),
+   ("Israel Nash","shuffle israel nash"),
+   ("Gillian Welch","shuffle gillian welch"),
+   ("Counting Crows","shuffle counting crows"),
+   ("Courtney Barnett","shuffle courtney barnett"),
+   ("Dar Williams","shuffle dar williams")],
 
-[  "station wnyc",
-   "station patty griffin",
-   "station neil young",
-   "station quickmix",
-   "station rem",
-   "station lucinda william",
-   "station counting crows",
-   "station dar williams"],
-
-[]
-]   
+[  ("WNYC","station wnyc"),
+   ("Patty Griffin","station patty griffin"),
+   ("Neil Young","station neil young"),
+   ("Pandora mix", "station quickmix"),
+   ("R.E.M","station rem"),
+   ("Lucinda Williams","station lucinda william"),
+   ("Counting Crows","station counting crows"),
+   ("Dar Williams","station dar williams")],
 
 tft = m5stack.Display()
 tft.font(tft.FONT_DejaVu18, fixedwidth=False)
@@ -87,7 +85,7 @@ def draw_menu(p):
     row = _N
     tft.clear()
     for i,action in enumerate(actions[p]):
-        tft.text(20, _N+i*25, action)
+        tft.text(20, _N+i*25, action[0])
 
     tft.text(5, row, ">")
 
@@ -122,7 +120,7 @@ def display_queue():
     for i,track in enumerate(q):
         tft.text(20, _N+i*25, track)
     tft.text(5, row, '>')
-    actions[4] = q 
+    #actions[4] = q 
 
 def wrap(text,lim):
     lines = []
@@ -240,18 +238,20 @@ while 1:
     if flag:
         action_num = (row-_N)//25
         print("action number =", action_num)
-
+        action = actions[page][action_num][1]
         if page < 4:
-            action = actions[page][action_num]
+            try:
+                idx = ['shuffle','station','queue'].index(action)
+            except ValueError:
+                pass
+            else:
+                if idx==2:
+                    display_queue()
+                else:
+                    draw_menu(idx+2)
+                flag = 0
+                continue
             print("action =", action)
-            if 'menu' in action:
-                draw_menu(int(action[-1]))
-                flag = 0
-                continue
-            if 'queue' in action:
-                display_queue()
-                flag = 0
-                continue
         else:
             action = "play_queue "+str(action_num)
             print("action =", action)
