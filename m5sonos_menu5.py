@@ -20,8 +20,7 @@ import network
 import json
 import urequests
 from config import mqtt_aws_host
-from settings import mqtt_id 
-#from settings import mqtt_id, location as loc
+from settings import mqtt_id, uris
 
 # main.py writes the file location on reset
 with open('location', 'r') as f:
@@ -29,8 +28,9 @@ with open('location', 'r') as f:
 
 sub_topic = 'sonos/{}/track'.format(loc)
 #pub_topic =  'sonos/{}'.format(loc)
-flag = bytearray(1)
-uri = 'http://192.168.1.126:5000/actions'
+#flag = bytearray(1)
+flag = 0
+uri = uris[loc]
 
 print("mqtt_id =", mqtt_id)
 print("host =", mqtt_aws_host)
@@ -42,7 +42,7 @@ print("uri = ", uri)
 #page 4, the queue, gets filled in programmatically
 
 actions = [
-['quieter', 'louder'],
+[("","quieter"), ("","louder")],
 
 [  ("play/pause","play_pause"),
    ("quieter","quieter"),
@@ -51,12 +51,13 @@ actions = [
    ("WNYC","station wnyc"),
    ("Pandora mix","station quickmix"),
    ("shuffle ...","shuffle"), # 2 shuffle> def display_choices()
-   ("Pandora station ...","station", #3
+   ("Pandora station ...","station"), #3
    ("show queue ...","queue")],
 
 [  ("Neil Young","shuffle neil young"),
    ("Jason Isbell","shuffle jason isbell"),
    ("Patty Griffin","shuffle patty griffin"),
+   ("Aimee Mann","shuffle aimee mann"),
    ("Israel Nash","shuffle israel nash"),
    ("Gillian Welch","shuffle gillian welch"),
    ("Counting Crows","shuffle counting crows"),
@@ -70,8 +71,8 @@ actions = [
    ("R.E.M","station rem"),
    ("Lucinda Williams","station lucinda william"),
    ("Counting Crows","station counting crows"),
-   ("Dar Williams","station dar williams")],
-
+   ("Dar Williams","station dar williams")]
+]
 tft = m5stack.Display()
 tft.font(tft.FONT_DejaVu18, fixedwidth=False)
 
@@ -238,8 +239,8 @@ while 1:
     if flag:
         action_num = (row-_N)//25
         print("action number =", action_num)
-        action = actions[page][action_num][1]
         if page < 4:
+            action = actions[page][action_num][1]
             try:
                 idx = ['shuffle','station','queue'].index(action)
             except ValueError:
