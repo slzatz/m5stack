@@ -86,9 +86,7 @@ actions = [
 tft = m5stack.Display()
 tft.font(tft.FONT_DejaVu18, fixedwidth=False)
 
-def draw_menu(page=0):
-    #global row
-    #row = _N
+def draw_menu():
     tft.clear()
     a_page = actions[chapter][page*9:page*9+9]
     for i,action in enumerate(a_page):
@@ -110,8 +108,7 @@ def display_image():
   for line in title:
     tft.text(5, tft.LASTY, line+"\n")
 
-def display_queue(page=0, new=True): #page_num
-    #global row
+def display_queue(new=True): 
     if new:
         try:
             response = urequests.post(uri, json={'action':'list_queue'})
@@ -121,15 +118,11 @@ def display_queue(page=0, new=True): #page_num
             print("error =", e)
         response.close()
         actions[4] = q 
-    #chapter = 4
-    #row = _N
     tft.clear()
-    #print("q =",q)
     page_actions = actions[4][page*9:page*9+9]
     for i,track in enumerate(page_actions):
         tft.text(20, _N+i*25, track)
     tft.text(5, row, '>')
-    #actions[4] = q 
 
 def wrap(text,lim):
     lines = []
@@ -163,6 +156,7 @@ def pubcb(pub):
 def datacb(msg):
     global chapter
     global row
+    global page
     chapter = 0
     row = _N
     print("[{}] Data arrived - topic: {}, message:{}".format(msg[0], msg[1], msg[2]))
@@ -174,6 +168,7 @@ def datacb(msg):
         z = {}
 
     track_info.update(z)
+    chapter = page = 0
     display_image()
 
 # note published callback doesn't seem to do anything
@@ -199,9 +194,9 @@ def button_hander_a(pin, pressed):
                 page+=1
                 row = _N
                 if chapter < 4:
-                    draw_menu(page=page)
+                    draw_menu()
                 else:
-                    display_queue(page=page, new=False)
+                    display_queue(new=False)
             else:
                 row+=25
                 tft.text(5, row, ">")
@@ -216,13 +211,17 @@ def button_hander_a(pin, pressed):
 # ButtonB
 def button_hander_b(pin, pressed):
     global flag
+    global page
+    global chapter
     if pressed:
         print("B pressed")
+        print("chapter =", chapter)
         if chapter:
             flag = 1
         else:
             page = 0
-            draw_menu(page=page)  
+            chapter = 1
+            draw_menu()  
 
         m5stack.tone(1800, duration=10, volume=1)
 
@@ -239,9 +238,9 @@ def button_hander_c(pin, pressed):
                 page-=1
                 row = 205
                 if chapter < 4:
-                    draw_menu(page=page)
+                    draw_menu()
                 else:
-                    display_queue(page=page, new=False)
+                    display_queue(new=False)
             else:
                 row-=25
                 tft.text(5, row, ">")
@@ -257,7 +256,7 @@ a = m5stack.ButtonA(callback=button_hander_a)
 b = m5stack.ButtonB(callback=button_hander_b)
 c = m5stack.ButtonC(callback=button_hander_c)
 
-draw_menu(0)
+draw_menu()
 
 cur_time = 0
 while 1:
@@ -270,6 +269,7 @@ while 1:
         print("action number =", action_num)
         if chapter < 4:
             action = actions[chapter][action_num][1]
+            print("action =", action)
             try:
                 idx = ['shuffle','station','queue'].index(action)
             except ValueError:
@@ -279,12 +279,11 @@ while 1:
                 if idx==2:
                     chapter=4
                     page=0
-                    display_queue(page=0, new=True)
+                    display_queue(new=True)
                 else:
-
                     chapter = idx+2
                     page = 0
-                    draw_menu(chapter)
+                    draw_menu()
                 flag = 0
                 continue
             print("action =", action)
@@ -300,7 +299,7 @@ while 1:
 
         flag = 0
         if chapter: # chapter could equal zero if this was volume on image
-            chapter = 0
+            chapter = page = 0
             display_image()
     #gc.collect()
     sleep(.1)
