@@ -69,6 +69,7 @@ actions = [
    ("Gillian Welch","shuffle gillian welch"),
    ("Counting Crows","shuffle counting crows"),
    ("Courtney Barnett","shuffle courtney barnett"),
+   ("Bruce Springsteen","shuffle bruce springsteen"),
    ("Dar Williams","shuffle dar williams")],
 
 [  ("WNYC","station wnyc"),
