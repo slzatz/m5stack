@@ -1,15 +1,12 @@
 '''
 Based on the @loboris ESP32 MicroPython port
 Uses the m5stack dev board with wrover with 4mb psram
-Combines the original sonos_remote concept of a
+The evolution of the sonos_remote concept
 When image (chapter = 0) is showing:
 left button lowers volume, right raises volume, middle displays menu (chapter=1)
-To also include the m5sonos_menu concept that allows more actions
-to be taken than just volume and play/pause.
-Also displays track information that is being published by local raspsberry pii
-sonos-companion script esp_check_mqtt4.py to AWS EC2 mqtt broker
-
-Actions are published to topic: sonos/ct or sonos/nyc
+The m5sonos_menu concept enable multiple chapters and pages of menus
+Also displays an image and track information that is being published by
+a local raspberry pi to the aws mosquitto broker
 The topic that is subscribed to for track info is sonos/{loc}/track
 '''
 #import gc # not sure if needed
@@ -61,15 +58,8 @@ actions = [
    ("mute", "mute"),
    ("unmute", "unmute")],
 
-[  ("Neil Young","shuffle neil young"),
-   ("Jason Isbell","shuffle jason isbell"),
-   ("Patty Griffin","shuffle patty griffin"),
-   ("Aimee Mann","shuffle aimee mann"),
-   ("Israel Nash","shuffle israel nash"),
-   ("Gillian Welch","shuffle gillian welch"),
-   ("Counting Crows","shuffle counting crows"),
-   ("Courtney Barnett","shuffle courtney barnett"),
-   ("Dar Williams","shuffle dar williams")],
+# the shuffle menu that follows is now read from a file
+[],
 
 [  ("WNYC","station wnyc"),
    ("Patty Griffin","station patty griffin"),
@@ -82,6 +72,17 @@ actions = [
 
 []
 ]
+
+# get artists for shuffle menu
+try:
+    response = urequests.post(uri, json={'action':'list_artists'})
+    q = response.json()
+except Exception as e:
+    q = ["There was a problem"]
+    print("error =", e)
+response.close()
+actions[2] = q 
+
 
 tft = m5stack.Display()
 tft.font(tft.FONT_DejaVu18, fixedwidth=False)
@@ -99,8 +100,10 @@ def display_image():
   artist = track_info.get('artist', '')
   if artist:
     try:
-      tft.image(0,0,'/sd/{}.jpg'.format(artist.lower().replace(' ', '_')))
-    except:
+      #tft.image(0,0,'/sd/{}.jpg'.format(artist.lower().replace(' ', '_')))
+      tft.image(0,0,'/sd/{}.jpg'.format(artist.lower()))
+    except Exception as e:
+      print("display_image: ",e)
       pass
   tft.text(5, 5, artist+"\n") 
 
@@ -115,15 +118,34 @@ def display_queue(new=True):
             q = response.json()
         except Exception as e:
             q = ["There was a problem"]
-            print("error =", e)
+            print("error list_queue =", e)
         response.close()
         actions[4] = q 
+    try:
+        response = urequests.post(uri, json={'action':'track_pos'})
+        pos = int(response.text) - 1
+        print("pos =",pos)
+    except Exception as e:
+        pos = -1
+        print("error track_pos =", e)
+    response.close()
+    actions[4] = q 
     tft.clear()
     page_actions = actions[4][page*9:page*9+9]
     for i,track in enumerate(page_actions):
-        tft.text(20, _N+i*25, track)
+        if page*9 + i == pos:
+            tft.text(20, _N+i*25, track, tft.RED)
+        else:
+            tft.text(20, _N+i*25, track)
     tft.text(5, row, '>')
 
+def display_artists():
+    tft.clear()
+    page_actions = actions[2][page*9:page*9+9]
+    for i,artist in enumerate(page_actions):
+        tft.text(20, _N+i*25, artist)
+    tft.text(5, row, '>')
+    
 def wrap(text,lim):
     lines = []
     pos = 0 
@@ -203,7 +225,7 @@ def button_hander_a(pin, pressed):
 
         else:
             #if image showing -> quieter
-            row = _N 
+            row = _N + 25
             flag = 1
 
         m5stack.tone(1800, duration=10, volume=1)
@@ -247,7 +269,7 @@ def button_hander_c(pin, pressed):
 
         else:
             #if image showing -> louder
-            row = _N + 25
+            row = _N + 50
             flag = 1
 
         m5stack.tone(1800, duration=10, volume=1)
@@ -267,16 +289,19 @@ while 1:
     if flag:
         action_num = page*9 + (row-_N)//25
         print("action number =", action_num)
-        if chapter < 4:
-            action = actions[chapter][action_num][1]
-            print("action =", action)
+        if chapter < 2:
+            action = actions[1][action_num][1]
             try:
                 idx = ['shuffle','station','queue'].index(action)
             except ValueError:
                 pass
             else:
                 row = _N
-                if idx==2:
+                if idx==0:
+                    chapter=2
+                    page=0
+                    display_artists()
+                elif idx==2:
                     chapter=4
                     page=0
                     display_queue(new=True)
@@ -284,12 +309,22 @@ while 1:
                     chapter = idx+2
                     page = 0
                     draw_menu()
+
                 flag = 0
-                continue
-            print("action =", action)
-        else:
+                print("action =", action)
+                continue #######################################
+            #print("action =", action)
+
+        elif chapter == 2:
+            action = "shuffle "+actions[2][action_num]
+            
+        elif chapter == 3:
+            action = "station "+actions[2][action_num]
+
+        elif chapter == 4:
             action = "play_queue "+str(action_num)
-            print("action =", action)
+
+        print("action =", action)
 
         try:
             response = urequests.post(uri, json={'action':action})
